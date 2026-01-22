@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 
 import InvoiceForm from "../components/InvoiceForm/InvoiceForm";
@@ -11,6 +12,7 @@ import {
   validateInvoice,
   type ValidationErrors,
 } from "../utils/validateInvoice";
+import { saveInvoiceToSupabase } from "../utils/invoices";
 
 import type {
   SellerDetails,
@@ -18,9 +20,11 @@ import type {
 } from "../types/invoice";
 
 export default function CreateInvoice() {
-  // =======================
-  // INVOICE ITEMS + TOTALS
-  // =======================
+  const navigate = useNavigate();
+
+  /* =======================
+     INVOICE ITEMS + TOTALS
+     ======================= */
   const {
     items,
     totals,
@@ -30,9 +34,9 @@ export default function CreateInvoice() {
     removeItem,
   } = useInvoiceCalculator();
 
-  // =======================
-  // INVOICE META
-  // =======================
+  /* =======================
+     INVOICE META
+     ======================= */
   const [invoiceNumber, setInvoiceNumber] =
     useState<string>("");
 
@@ -40,9 +44,9 @@ export default function CreateInvoice() {
     setInvoiceNumber(generateInvoiceNumber());
   }, []);
 
-  // =======================
-  // SELLER / BUYER STATE
-  // =======================
+  /* =======================
+     SELLER / BUYER STATE
+     ======================= */
   const [seller, setSeller] =
     useState<SellerDetails>({
       companyName: "",
@@ -65,9 +69,9 @@ export default function CreateInvoice() {
       shippingState: "",
     });
 
-  // =======================
-  // VALIDATION
-  // =======================
+  /* =======================
+     VALIDATION
+     ======================= */
   const [validationErrors, setValidationErrors] =
     useState<ValidationErrors>({
       seller: {},
@@ -85,23 +89,20 @@ export default function CreateInvoice() {
     Object.keys(validationErrors.buyer).length === 0 &&
     !validationErrors.items;
 
-  // =======================
-  // PDF EXPORT
-  // =======================
+  /* =======================
+     PDF EXPORT
+     ======================= */
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const downloadPDF = () => {
-    if (!isInvoiceValid || !invoiceRef.current) return;
+    if (!invoiceRef.current) return;
 
     html2pdf()
       .from(invoiceRef.current)
       .set({
         margin: 10,
         filename: `${invoiceNumber}.pdf`,
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-        },
+        html2canvas: { scale: 2 },
         jsPDF: {
           unit: "mm",
           format: "a4",
@@ -111,21 +112,53 @@ export default function CreateInvoice() {
       .save();
   };
 
-  // =======================
-  // RENDER
-  // =======================
+  /* =======================
+     SAVE TO SUPABASE
+     ======================= */
+  const handleSaveInvoice = async () => {
+    if (!isInvoiceValid) return;
+
+    try {
+      await saveInvoiceToSupabase({
+        invoiceNumber,
+        seller,
+        buyer,
+        items,
+        totals,
+      });
+
+      navigate("/"); // back to dashboard
+    }catch (err: any) {
+        console.error("SAVE INVOICE ERROR:", err);
+        alert(err.message || "Failed to save invoice");
+     }
+
+  };
+
+  /* =======================
+     RENDER
+     ======================= */
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      {/* PAGE TITLE */}
-      <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700">
-        Billcraft – GST Invoice
-      </h1>
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-indigo-700">
+          Create GST Invoice
+        </h1>
+
+        <button
+          onClick={() => navigate("/")}
+          className="border px-4 py-2 rounded hover:bg-gray-100"
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* ================= LEFT SIDE ================= */}
         <div className="space-y-6">
-          {/* SELLER / BUYER FORM */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
+          {/* SELLER / BUYER */}
+          <div className="bg-white p-6 rounded-xl shadow">
             <SellerBuyerForm
               seller={seller}
               buyer={buyer}
@@ -151,8 +184,8 @@ export default function CreateInvoice() {
             />
           </div>
 
-          {/* ITEM FORM */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
+          {/* ITEMS */}
+          <div className="bg-white p-6 rounded-xl shadow">
             {validationErrors.items && (
               <p className="text-sm text-red-600 mb-2">
                 {validationErrors.items}
@@ -171,21 +204,30 @@ export default function CreateInvoice() {
 
         {/* ================= RIGHT SIDE ================= */}
         <div className="space-y-4">
-          {/* PDF BUTTON */}
-          <button
-            onClick={downloadPDF}
-            disabled={!isInvoiceValid}
-            className={`w-full py-2 rounded-lg font-semibold transition ${
-              isInvoiceValid
-                ? "bg-green-600 text-white hover:bg-green-700"
-                : "bg-gray-300 text-gray-600 cursor-not-allowed"
-            }`}
-          >
-            ⬇ Download GST Invoice (PDF)
-          </button>
+          {/* ACTION BUTTONS */}
+          <div className="flex gap-4">
+            <button
+              onClick={handleSaveInvoice}
+              disabled={!isInvoiceValid}
+              className={`flex-1 py-2 rounded-lg font-semibold ${
+                isInvoiceValid
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-300 text-gray-600 cursor-not-allowed"
+              }`}
+            >
+              💾 Save Invoice
+            </button>
 
-          {/* GST INVOICE PREVIEW */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
+            <button
+              onClick={downloadPDF}
+              className="flex-1 py-2 rounded-lg border hover:bg-gray-100"
+            >
+              ⬇ Download PDF
+            </button>
+          </div>
+
+          {/* PREVIEW */}
+          <div className="bg-white p-6 rounded-xl shadow">
             <GstInvoicePreview
               ref={invoiceRef}
               items={items}

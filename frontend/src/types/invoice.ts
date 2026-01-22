@@ -50,3 +50,13 @@ export interface Invoice {
   discountRate: number;
   totals: InvoiceTotals;
 }
+export interface InvoiceHistoryEntry {
+  id: string;
+  invoice_number: string;
+  seller: SellerDetails;
+  buyer: BuyerDetails;
+  items: InvoiceItem[];
+  totals: InvoiceTotals;
+  created_at: string;
+}
+
