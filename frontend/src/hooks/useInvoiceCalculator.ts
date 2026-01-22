@@ -1,59 +1,88 @@
 import { useMemo, useState } from "react";
 import type { InvoiceItem, InvoiceTotals } from "../types/invoice";
 import { calculateInvoiceTotals } from "../utils/calculations";
+import { validateItem } from "../utils/validators";
 
+/**
+ * Central GST-aware invoice state & calculation hook
+ */
 export function useInvoiceCalculator() {
+  // --------------------
+  // STATE
+  // --------------------
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [taxRate, setTaxRate] = useState<number>(0);
-  const [discountRate, setDiscountRate] = useState<number>(0);
+  const [errors, setErrors] = useState<Record<string, any>>({});
 
-  // 🔢 Auto-calculate totals whenever data changes
+  // --------------------
+  // DERIVED TOTALS
+  // --------------------
   const totals: InvoiceTotals = useMemo(() => {
-    return calculateInvoiceTotals(items, taxRate, discountRate);
-  }, [items, taxRate, discountRate]);
+    return calculateInvoiceTotals(items);
+  }, [items]);
 
-  // ➕ Add new item
+  // --------------------
+  // ITEM OPERATIONS
+  // --------------------
+
   const addItem = () => {
-    setItems((prev) => [
+    const newItem: InvoiceItem = {
+      id: crypto.randomUUID(),
+      name: "",
+      quantity: 1,
+      price: 0,
+      discountRate: 0,
+      gstRate: 0,
+    };
+
+    setItems((prev) => [...prev, newItem]);
+
+    setErrors((prev) => ({
       ...prev,
-      {
-        id: crypto.randomUUID(),
-        name: "",
-        quantity: 1,
-        price: 0,
-        total: 0,
-      },
-    ]);
+      [newItem.id]: validateItem(newItem),
+    }));
   };
 
-  // ✏️ Update item field
   const updateItem = (
     id: string,
     field: keyof InvoiceItem,
     value: string | number
   ) => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, [field]: value }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id !== id) return item;
+
+        const updatedItem = {
+          ...item,
+          [field]: value,
+        };
+
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [id]: validateItem(updatedItem),
+        }));
+
+        return updatedItem;
+      })
     );
   };
 
-  // ❌ Remove item
   const removeItem = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
+
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
+  // --------------------
+  // PUBLIC API
+  // --------------------
   return {
     items,
-    taxRate,
-    discountRate,
     totals,
-
-    setTaxRate,
-    setDiscountRate,
+    errors,
     addItem,
     updateItem,
     removeItem,

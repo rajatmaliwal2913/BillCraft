@@ -14,50 +14,52 @@ export default function InvoicePreview({
   discountRate,
 }: InvoicePreviewProps) {
   return (
-    <div
-      style={{
-        border: "1px solid #ccc",
-        padding: "16px",
-        borderRadius: "8px",
-        background: "#fafafa",
-      }}
-    >
-      <h2>Invoice Preview</h2>
+    <div className="bg-gray-50 p-6 rounded-xl border">
+      <h2 className="text-lg font-semibold mb-4">Invoice Preview</h2>
 
-      {items.length === 0 ? (
-        <p>No items added</p>
-      ) : (
-        <table width="100%" cellPadding={8}>
-          <thead>
-            <tr>
-              <th align="left">Item</th>
-              <th>Qty</th>
-              <th>Price</th>
-              <th>Total</th>
+      <table className="w-full text-sm mb-6">
+        <thead className="text-gray-500 border-b">
+          <tr>
+            <th className="text-left py-2">Item</th>
+            <th className="text-center">Qty</th>
+            <th className="text-right">Price</th>
+            <th className="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr key={item.id} className="border-b last:border-b-0">
+              <td className="py-2">{item.name || "—"}</td>
+              <td className="text-center">{item.quantity}</td>
+              <td className="text-right">₹{item.price}</td>
+              <td className="text-right font-medium">
+                ₹{(item.quantity * item.price).toFixed(2)}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.name || "—"}</td>
-                <td align="center">{item.quantity}</td>
-                <td align="right">₹{item.price}</td>
-                <td align="right">
-                  ₹{(item.quantity * item.price).toFixed(2)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </table>
 
-      <hr />
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span>Subtotal</span>
+          <span>₹{totals.subtotal}</span>
+        </div>
 
-      <div style={{ textAlign: "right" }}>
-        <p>Subtotal: ₹{totals.subtotal}</p>
-        <p>Tax ({taxRate}%): ₹{totals.tax}</p>
-        <p>Discount ({discountRate}%): -₹{totals.discount}</p>
-        <h3>Grand Total: ₹{totals.grandTotal}</h3>
+        <div className="flex justify-between">
+          <span>Tax ({taxRate}%)</span>
+          <span>₹{totals.tax}</span>
+        </div>
+
+        <div className="flex justify-between text-red-600">
+          <span>Discount ({discountRate}%)</span>
+          <span>-₹{totals.discount}</span>
+        </div>
+
+        <div className="flex justify-between font-semibold text-lg pt-3 border-t">
+          <span>Grand Total</span>
+          <span>₹{totals.grandTotal}</span>
+        </div>
       </div>
     </div>
   );

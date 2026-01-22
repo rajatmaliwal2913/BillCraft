@@ -3,8 +3,7 @@ import type { InvoiceItem } from "../../types/invoice";
 
 interface InvoiceFormProps {
   items: InvoiceItem[];
-  taxRate: number;
-  discountRate: number;
+  errors?: Record<string, any>;
   onAddItem: () => void;
   onUpdateItem: (
     id: string,
@@ -12,60 +11,44 @@ interface InvoiceFormProps {
     value: string | number
   ) => void;
   onRemoveItem: (id: string) => void;
-  onTaxChange: (value: number) => void;
-  onDiscountChange: (value: number) => void;
 }
 
 export default function InvoiceForm({
   items,
-  taxRate,
-  discountRate,
+  errors,
   onAddItem,
   onUpdateItem,
   onRemoveItem,
-  onTaxChange,
-  onDiscountChange,
 }: InvoiceFormProps) {
   return (
-    <div>
-      <h2>Invoice Items</h2>
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold text-gray-800">
+        Invoice Items
+      </h2>
 
-      {items.map((item) => (
+      {items.length === 0 && (
+        <p className="text-sm text-gray-500">
+          No items added yet.
+        </p>
+      )}
+
+      {items.map((item, index) => (
         <ItemRow
           key={item.id}
+          index={index + 1}
           item={item}
+          errors={errors?.[item.id]}
           onChange={onUpdateItem}
           onRemove={onRemoveItem}
         />
       ))}
 
-      <button onClick={onAddItem}>➕ Add Item</button>
-
-      <hr />
-
-      <div>
-        <label>
-          Tax (%):
-          <input
-            type="number"
-            value={taxRate}
-            onChange={(e) => onTaxChange(Number(e.target.value))}
-          />
-        </label>
-      </div>
-
-      <div>
-        <label>
-          Discount (%):
-          <input
-            type="number"
-            value={discountRate}
-            onChange={(e) =>
-              onDiscountChange(Number(e.target.value))
-            }
-          />
-        </label>
-      </div>
+      <button
+        onClick={onAddItem}
+        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+      >
+        ➕ Add Item
+      </button>
     </div>
   );
 }

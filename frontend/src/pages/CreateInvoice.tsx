@@ -1,52 +1,43 @@
 import InvoiceForm from "../components/InvoiceForm/InvoiceForm";
-import InvoicePreview from "../components/InvoicePreview/InvoicePreview";
+import GstInvoicePreview from "../components/InvoicePreview/GstInvoicePreview";
 import { useInvoiceCalculator } from "../hooks/useInvoiceCalculator";
 
 export default function CreateInvoice() {
   const {
     items,
-    taxRate,
-    discountRate,
     totals,
+    errors,
     addItem,
     updateItem,
     removeItem,
-    setTaxRate,
-    setDiscountRate,
   } = useInvoiceCalculator();
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "24px",
-        padding: "24px",
-      }}
-    >
-      {/* LEFT: FORM */}
-      <div>
-        <h1>Billcraft – Create Invoice</h1>
+    <div className="min-h-screen bg-gray-100 p-8">
+      <h1 className="text-3xl font-bold mb-6 text-center text-indigo-700">
+        Billcraft – GST Invoice
+      </h1>
 
-        <InvoiceForm
-          items={items}
-          taxRate={taxRate}
-          discountRate={discountRate}
-          onAddItem={addItem}
-          onUpdateItem={updateItem}
-          onRemoveItem={removeItem}
-          onTaxChange={setTaxRate}
-          onDiscountChange={setDiscountRate}
-        />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* LEFT: FORM */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <InvoiceForm
+            items={items}
+            errors={errors}
+            onAddItem={addItem}
+            onUpdateItem={updateItem}
+            onRemoveItem={removeItem}
+          />
+        </div>
+
+        {/* RIGHT: GST PREVIEW */}
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <GstInvoicePreview
+            items={items}
+            totals={totals}
+          />
+        </div>
       </div>
-
-      {/* RIGHT: LIVE PREVIEW */}
-      <InvoicePreview
-        items={items}
-        totals={totals}
-        taxRate={taxRate}
-        discountRate={discountRate}
-      />
     </div>
   );
 }

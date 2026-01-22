@@ -47,24 +47,40 @@ export function calculateDiscount(
 /**
  * Calculate final totals for invoice
  */
-export function calculateInvoiceTotals(
-  items: InvoiceItem[],
-  taxRate: number,
-  discountRate: number
-): InvoiceTotals {
-  const subtotal = calculateSubtotal(items);
-  const tax = calculateTax(subtotal, taxRate);
-  const discount = calculateDiscount(subtotal, discountRate);
 
-  const grandTotal = roundToTwo(subtotal + tax - discount);
+
+export function calculateInvoiceTotals(
+  items: InvoiceItem[]
+): InvoiceTotals {
+  let subtotal = 0;
+  let totalDiscount = 0;
+  let totalGST = 0;
+
+  items.forEach((item) => {
+    const base = item.quantity * item.price;
+    const discount = (base * item.discountRate) / 100;
+    const taxable = base - discount;
+    const gst = (taxable * item.gstRate) / 100;
+
+    subtotal += base;
+    totalDiscount += discount;
+    totalGST += gst;
+  });
+
+  const grandTotal = subtotal - totalDiscount + totalGST;
 
   return {
-    subtotal,
-    tax,
-    discount,
-    grandTotal,
+    subtotal: round(subtotal),
+    discount: round(totalDiscount),
+    tax: round(totalGST),
+    grandTotal: round(grandTotal),
   };
 }
+
+function round(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
 
 /**
  * Utility: round to 2 decimal places

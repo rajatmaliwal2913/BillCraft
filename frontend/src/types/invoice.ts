@@ -3,7 +3,8 @@ export interface InvoiceItem {
   name: string;
   quantity: number;
   price: number;
-  total: number;
+  discountRate: number; // NEW
+  gstRate: number;      // NEW
 }
 
 export interface InvoiceTotals {
