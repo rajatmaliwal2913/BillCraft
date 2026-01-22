@@ -1,20 +1,45 @@
-import type { SellerDetails, BuyerDetails, InvoiceItem } from "../types/invoice";
+import type {
+  SellerDetails,
+  BuyerDetails,
+  InvoiceItem,
+} from "../types/invoice";
+
+export interface ValidationErrors {
+  seller: Partial<Record<keyof SellerDetails, string>>;
+  buyer: Partial<Record<keyof BuyerDetails, string>>;
+  items: string | null;
+}
 
 export function validateInvoice(
   seller: SellerDetails,
   buyer: BuyerDetails,
   items: InvoiceItem[]
-): string[] {
-  const errors: string[] = [];
+): ValidationErrors {
+  const errors: ValidationErrors = {
+    seller: {},
+    buyer: {},
+    items: null,
+  };
 
-  if (!seller.companyName) errors.push("Seller company name is required");
-  if (!seller.address) errors.push("Seller address is required");
-  if (!seller.gstin) errors.push("Seller GSTIN is required");
+  // Seller validations
+  if (!seller.companyName)
+    errors.seller.companyName = "Company name is required";
+  if (!seller.address)
+    errors.seller.address = "Address is required";
+  if (!seller.gstin)
+    errors.seller.gstin = "GSTIN is required";
+  if (!seller.state)
+    errors.seller.state = "State is required";
 
-  if (!buyer.name) errors.push("Buyer name is required");
-  if (!buyer.address) errors.push("Buyer billing address is required");
+  // Buyer validations
+  if (!buyer.name)
+    errors.buyer.name = "Buyer name is required";
+  if (!buyer.address)
+    errors.buyer.address = "Billing address is required";
 
-  if (items.length === 0) errors.push("At least one item is required");
+  // Items
+  if (items.length === 0)
+    errors.items = "At least one item is required";
 
   return errors;
 }

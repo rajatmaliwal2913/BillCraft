@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import html2pdf from "html2pdf.js";
-import { validateInvoice } from "../utils/validateInvoice";
+
 import InvoiceForm from "../components/InvoiceForm/InvoiceForm";
 import SellerBuyerForm from "../components/InvoiceForm/SellerBuyerForm";
 import GstInvoicePreview from "../components/InvoicePreview/GstInvoicePreview";
 
 import { useInvoiceCalculator } from "../hooks/useInvoiceCalculator";
 import { generateInvoiceNumber } from "../utils/invoiceNumber";
+import {
+  validateInvoice,
+  type ValidationErrors,
+} from "../utils/validateInvoice";
 
 import type {
   SellerDetails,
@@ -20,7 +24,7 @@ export default function CreateInvoice() {
   const {
     items,
     totals,
-    errors,
+    errors: itemErrors,
     addItem,
     updateItem,
     removeItem,
@@ -29,7 +33,8 @@ export default function CreateInvoice() {
   // =======================
   // INVOICE META
   // =======================
-  const [invoiceNumber, setInvoiceNumber] = useState<string>("");
+  const [invoiceNumber, setInvoiceNumber] =
+    useState<string>("");
 
   useEffect(() => {
     setInvoiceNumber(generateInvoiceNumber());
@@ -38,50 +43,73 @@ export default function CreateInvoice() {
   // =======================
   // SELLER / BUYER STATE
   // =======================
-  const [seller, setSeller] = useState<SellerDetails>({
-    companyName: "",
-    address: "",
-    gstin: "",
-    state: "",
-    logo: undefined,
-  });
+  const [seller, setSeller] =
+    useState<SellerDetails>({
+      companyName: "",
+      address: "",
+      gstin: "",
+      state: "",
+      phone: "",
+      email: "",
+      logo: undefined,
+    });
 
-  const [buyer, setBuyer] = useState<BuyerDetails>({
-    name: "",
-    address: "",
-    gstin: "",
-    state: "",
-  });
+  const [buyer, setBuyer] =
+    useState<BuyerDetails>({
+      name: "",
+      address: "",
+      gstin: "",
+      state: "",
+      phone: "",
+      shippingAddress: "",
+      shippingState: "",
+    });
+
+  // =======================
+  // VALIDATION
+  // =======================
+  const [validationErrors, setValidationErrors] =
+    useState<ValidationErrors>({
+      seller: {},
+      buyer: {},
+      items: null,
+    });
+
+  useEffect(() => {
+    const errs = validateInvoice(seller, buyer, items);
+    setValidationErrors(errs);
+  }, [seller, buyer, items]);
+
+  const isInvoiceValid =
+    Object.keys(validationErrors.seller).length === 0 &&
+    Object.keys(validationErrors.buyer).length === 0 &&
+    !validationErrors.items;
 
   // =======================
   // PDF EXPORT
   // =======================
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-const downloadPDF = () => {
-  const validationErrors = validateInvoice(seller, buyer, items);
+  const downloadPDF = () => {
+    if (!isInvoiceValid || !invoiceRef.current) return;
 
-  if (validationErrors.length > 0) {
-    alert(
-      "Please fix the following before downloading PDF:\n\n" +
-        validationErrors.join("\n")
-    );
-    return;
-  }
-
-  if (!invoiceRef.current) return;
-
-  html2pdf()
-    .from(invoiceRef.current)
-    .set({
-      margin: 10,
-      filename: `${invoiceNumber}.pdf`,
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    })
-    .save();
-};
-
+    html2pdf()
+      .from(invoiceRef.current)
+      .set({
+        margin: 10,
+        filename: `${invoiceNumber}.pdf`,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+        },
+      })
+      .save();
+  };
 
   // =======================
   // RENDER
@@ -101,23 +129,39 @@ const downloadPDF = () => {
             <SellerBuyerForm
               seller={seller}
               buyer={buyer}
+              errors={validationErrors}
               onSellerChange={(field, value) =>
-                setSeller((prev) => ({ ...prev, [field]: value }))
+                setSeller((prev) => ({
+                  ...prev,
+                  [field]: value,
+                }))
               }
               onBuyerChange={(field, value) =>
-                setBuyer((prev) => ({ ...prev, [field]: value }))
+                setBuyer((prev) => ({
+                  ...prev,
+                  [field]: value,
+                }))
               }
               onLogoUpload={(logo) =>
-                setSeller((prev) => ({ ...prev, logo }))
+                setSeller((prev) => ({
+                  ...prev,
+                  logo,
+                }))
               }
             />
           </div>
 
           {/* ITEM FORM */}
           <div className="bg-white p-6 rounded-xl shadow-md">
+            {validationErrors.items && (
+              <p className="text-sm text-red-600 mb-2">
+                {validationErrors.items}
+              </p>
+            )}
+
             <InvoiceForm
               items={items}
-              errors={errors}
+              errors={itemErrors}
               onAddItem={addItem}
               onUpdateItem={updateItem}
               onRemoveItem={removeItem}
@@ -130,8 +174,12 @@ const downloadPDF = () => {
           {/* PDF BUTTON */}
           <button
             onClick={downloadPDF}
-            disabled={items.length === 0}
-            className="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 transition"
+            disabled={!isInvoiceValid}
+            className={`w-full py-2 rounded-lg font-semibold transition ${
+              isInvoiceValid
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}
           >
             ⬇ Download GST Invoice (PDF)
           </button>

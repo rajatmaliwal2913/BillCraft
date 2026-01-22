@@ -3,11 +3,13 @@ import type {
   SellerDetails,
   BuyerDetails,
 } from "../../types/invoice";
+import type { ValidationErrors } from "../../utils/validateInvoice";
 import { INDIAN_STATES } from "../../constants/indianStates";
 
 interface SellerBuyerFormProps {
   seller: SellerDetails;
   buyer: BuyerDetails;
+  errors: ValidationErrors;
   onSellerChange: (
     field: keyof SellerDetails,
     value: string
@@ -22,13 +24,13 @@ interface SellerBuyerFormProps {
 export default function SellerBuyerForm({
   seller,
   buyer,
+  errors,
   onSellerChange,
   onBuyerChange,
   onLogoUpload,
 }: SellerBuyerFormProps) {
   const [sameAsBilling, setSameAsBilling] = useState(true);
 
-  // Handle logo upload
   const handleLogoChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -45,7 +47,7 @@ export default function SellerBuyerForm({
     <div className="space-y-8">
       {/* ================= SELLER ================= */}
       <div>
-        <h2 className="text-lg font-semibold mb-3 text-gray-800">
+        <h2 className="text-lg font-semibold mb-3">
           Seller Details
         </h2>
 
@@ -55,8 +57,15 @@ export default function SellerBuyerForm({
           onChange={(e) =>
             onSellerChange("companyName", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className={`w-full border rounded px-3 py-2 mb-1 ${
+            errors.seller.companyName ? "border-red-500" : ""
+          }`}
         />
+        {errors.seller.companyName && (
+          <p className="text-xs text-red-600">
+            {errors.seller.companyName}
+          </p>
+        )}
 
         <textarea
           placeholder="Address *"
@@ -64,8 +73,15 @@ export default function SellerBuyerForm({
           onChange={(e) =>
             onSellerChange("address", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className={`w-full border rounded px-3 py-2 mb-1 ${
+            errors.seller.address ? "border-red-500" : ""
+          }`}
         />
+        {errors.seller.address && (
+          <p className="text-xs text-red-600">
+            {errors.seller.address}
+          </p>
+        )}
 
         <input
           placeholder="GSTIN *"
@@ -73,27 +89,39 @@ export default function SellerBuyerForm({
           onChange={(e) =>
             onSellerChange("gstin", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className={`w-full border rounded px-3 py-2 mb-1 ${
+            errors.seller.gstin ? "border-red-500" : ""
+          }`}
         />
+        {errors.seller.gstin && (
+          <p className="text-xs text-red-600">
+            {errors.seller.gstin}
+          </p>
+        )}
 
         <select
-            value={seller.state}
-            onChange={(e) =>
-                onSellerChange("state", e.target.value)
-            }
-            className="w-full border rounded px-3 py-2 mb-2"
-            >
-            <option value="">Select State *</option>
-            {INDIAN_STATES.map((state) => (
-                <option key={state} value={state}>
-                {state}
-                </option>
-            ))}
+          value={seller.state}
+          onChange={(e) =>
+            onSellerChange("state", e.target.value)
+          }
+          className={`w-full border rounded px-3 py-2 mb-1 ${
+            errors.seller.state ? "border-red-500" : ""
+          }`}
+        >
+          <option value="">Select State *</option>
+          {INDIAN_STATES.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
         </select>
+        {errors.seller.state && (
+          <p className="text-xs text-red-600">
+            {errors.seller.state}
+          </p>
+        )}
 
-
-
-        <div className="grid grid-cols-2 gap-3 mb-2">
+        <div className="grid grid-cols-2 gap-3 mt-2">
           <input
             placeholder="Phone"
             value={seller.phone || ""}
@@ -102,7 +130,6 @@ export default function SellerBuyerForm({
             }
             className="border rounded px-3 py-2"
           />
-
           <input
             placeholder="Email"
             value={seller.email || ""}
@@ -117,13 +144,13 @@ export default function SellerBuyerForm({
           type="file"
           accept="image/*"
           onChange={handleLogoChange}
-          className="text-sm"
+          className="text-sm mt-2"
         />
       </div>
 
       {/* ================= BUYER ================= */}
       <div>
-        <h2 className="text-lg font-semibold mb-3 text-gray-800">
+        <h2 className="text-lg font-semibold mb-3">
           Buyer Details (Billing)
         </h2>
 
@@ -133,8 +160,15 @@ export default function SellerBuyerForm({
           onChange={(e) =>
             onBuyerChange("name", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className={`w-full border rounded px-3 py-2 mb-1 ${
+            errors.buyer.name ? "border-red-500" : ""
+          }`}
         />
+        {errors.buyer.name && (
+          <p className="text-xs text-red-600">
+            {errors.buyer.name}
+          </p>
+        )}
 
         <textarea
           placeholder="Billing Address *"
@@ -142,8 +176,15 @@ export default function SellerBuyerForm({
           onChange={(e) =>
             onBuyerChange("address", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className={`w-full border rounded px-3 py-2 mb-1 ${
+            errors.buyer.address ? "border-red-500" : ""
+          }`}
         />
+        {errors.buyer.address && (
+          <p className="text-xs text-red-600">
+            {errors.buyer.address}
+          </p>
+        )}
 
         <input
           placeholder="GSTIN (optional)"
@@ -155,21 +196,19 @@ export default function SellerBuyerForm({
         />
 
         <select
-            value={buyer.state}
-            onChange={(e) =>
-                onBuyerChange("state", e.target.value)
-            }
-            className="w-full border rounded px-3 py-2 mb-2"
-            >
-            <option value="">Select State</option>
-            {INDIAN_STATES.map((state) => (
-                <option key={state} value={state}>
-                {state}
-                </option>
-            ))}
+          value={buyer.state}
+          onChange={(e) =>
+            onBuyerChange("state", e.target.value)
+          }
+          className="w-full border rounded px-3 py-2 mb-2"
+        >
+          <option value="">Select State</option>
+          {INDIAN_STATES.map((state) => (
+            <option key={state} value={state}>
+              {state}
+            </option>
+          ))}
         </select>
-
-
 
         <input
           placeholder="Contact Number"
@@ -180,7 +219,6 @@ export default function SellerBuyerForm({
           className="w-full border rounded px-3 py-2 mb-3"
         />
 
-        {/* SHIPPING TOGGLE */}
         <label className="flex items-center gap-2 text-sm mb-2">
           <input
             type="checkbox"
@@ -192,9 +230,8 @@ export default function SellerBuyerForm({
           Shipping address same as billing
         </label>
 
-        {/* SHIPPING ADDRESS */}
         {!sameAsBilling && (
-          <div className="space-y-2 mt-2">
+          <div className="space-y-2">
             <textarea
               placeholder="Shipping Address"
               value={buyer.shippingAddress || ""}
@@ -208,21 +245,24 @@ export default function SellerBuyerForm({
             />
 
             <select
-                value={buyer.shippingState || ""}
-                onChange={(e) =>
-                    onBuyerChange("shippingState", e.target.value)
-                }
-                className="w-full border rounded px-3 py-2"
-                >
-                <option value="">Select Shipping State</option>
-                {INDIAN_STATES.map((state) => (
-                    <option key={state} value={state}>
-                    {state}
-                    </option>
-                ))}
+              value={buyer.shippingState || ""}
+              onChange={(e) =>
+                onBuyerChange(
+                  "shippingState",
+                  e.target.value
+                )
+              }
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">
+                Select Shipping State
+              </option>
+              {INDIAN_STATES.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
             </select>
-
-
           </div>
         )}
       </div>

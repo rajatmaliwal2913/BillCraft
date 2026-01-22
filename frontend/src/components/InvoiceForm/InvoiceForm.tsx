@@ -1,9 +1,9 @@
-import ItemRow from "./ItemRow";
 import type { InvoiceItem } from "../../types/invoice";
+import ItemRow from "./ItemRow";
 
 interface InvoiceFormProps {
   items: InvoiceItem[];
-  errors?: Record<string, any>;
+  errors: Record<string, any>;
   onAddItem: () => void;
   onUpdateItem: (
     id: string,
@@ -21,33 +21,27 @@ export default function InvoiceForm({
   onRemoveItem,
 }: InvoiceFormProps) {
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-800">
+    <div>
+      <h2 className="text-lg font-semibold mb-4">
         Invoice Items
       </h2>
 
-      {items.length === 0 && (
-        <p className="text-sm text-gray-500">
-          No items added yet.
-        </p>
-      )}
-
-      {items.map((item, index) => (
-        <ItemRow
-          key={item.id}
-          index={index + 1}
-          item={item}
-          errors={errors?.[item.id]}
-          onChange={onUpdateItem}
-          onRemove={onRemoveItem}
-        />
-      ))}
+      <div className="space-y-4">
+        {items.map((item) => (
+          <ItemRow
+                key={item.id}
+                item={item}
+                errors={errors[item.id] || {}}
+                onChange={onUpdateItem}
+                onRemove={onRemoveItem} index={0}          />
+        ))}
+      </div>
 
       <button
         onClick={onAddItem}
-        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+        className="mt-4 w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition"
       >
-        ➕ Add Item
+        + Add Item
       </button>
     </div>
   );
