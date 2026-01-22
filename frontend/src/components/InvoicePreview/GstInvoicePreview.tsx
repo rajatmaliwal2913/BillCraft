@@ -5,6 +5,7 @@ import { numberToWords } from "../../utils/numberToWords";
 interface GstInvoicePreviewProps {
   items: InvoiceItem[];
   totals: InvoiceTotals;
+  invoiceNumber: string;
 }
 
 const GstInvoicePreview = forwardRef<
