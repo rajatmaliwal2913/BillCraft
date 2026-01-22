@@ -28,12 +28,13 @@ export default function InvoiceForm({
 
       <div className="space-y-4">
         {items.map((item) => (
-          <ItemRow
+            <ItemRow
                 key={item.id}
                 item={item}
                 errors={errors[item.id] || {}}
                 onChange={onUpdateItem}
-                onRemove={onRemoveItem} index={0}          />
+                onRemove={onRemoveItem}
+            />
         ))}
       </div>
 
