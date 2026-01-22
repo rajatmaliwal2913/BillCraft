@@ -1,4 +1,4 @@
-import { InvoiceItem, InvoiceTotals } from "../types/invoice";
+import type { InvoiceItem, InvoiceTotals } from "../types/invoice";
 
 /**
  * Calculate total for a single item

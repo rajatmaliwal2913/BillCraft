@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { InvoiceItem, InvoiceTotals } from "../types/invoice";
+import type { InvoiceItem, InvoiceTotals } from "../types/invoice";
 import { calculateInvoiceTotals } from "../utils/calculations";
 
 export function useInvoiceCalculator() {
