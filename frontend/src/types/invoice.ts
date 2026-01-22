@@ -6,6 +6,28 @@ export interface InvoiceItem {
   discountRate: number; // NEW
   gstRate: number;      // NEW
 }
+export interface SellerDetails {
+  companyName: string;
+  address: string;
+  gstin: string;
+  state: string;
+  phone?: string;
+  email?: string;
+  logo?: string;
+}
+
+export interface BuyerDetails {
+  name: string;
+  address: string;        // Billing address
+  gstin: string;
+  state: string;
+  phone?: string;
+
+  shippingAddress?: string;
+  shippingState?: string;
+}
+
+
 
 export interface InvoiceTotals {
   subtotal: number;

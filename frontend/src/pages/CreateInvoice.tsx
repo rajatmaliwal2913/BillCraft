@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import html2pdf from "html2pdf.js";
-
+import { validateInvoice } from "../utils/validateInvoice";
 import InvoiceForm from "../components/InvoiceForm/InvoiceForm";
+import SellerBuyerForm from "../components/InvoiceForm/SellerBuyerForm";
 import GstInvoicePreview from "../components/InvoicePreview/GstInvoicePreview";
+
 import { useInvoiceCalculator } from "../hooks/useInvoiceCalculator";
 import { generateInvoiceNumber } from "../utils/invoiceNumber";
 
+import type {
+  SellerDetails,
+  BuyerDetails,
+} from "../types/invoice";
+
 export default function CreateInvoice() {
-  // --------------------
-  // Invoice state
-  // --------------------
+  // =======================
+  // INVOICE ITEMS + TOTALS
+  // =======================
   const {
     items,
     totals,
@@ -19,40 +26,66 @@ export default function CreateInvoice() {
     removeItem,
   } = useInvoiceCalculator();
 
+  // =======================
+  // INVOICE META
+  // =======================
   const [invoiceNumber, setInvoiceNumber] = useState<string>("");
 
-  // Generate invoice number once on page load
   useEffect(() => {
     setInvoiceNumber(generateInvoiceNumber());
   }, []);
 
-  // Ref for PDF export
+  // =======================
+  // SELLER / BUYER STATE
+  // =======================
+  const [seller, setSeller] = useState<SellerDetails>({
+    companyName: "",
+    address: "",
+    gstin: "",
+    state: "",
+    logo: undefined,
+  });
+
+  const [buyer, setBuyer] = useState<BuyerDetails>({
+    name: "",
+    address: "",
+    gstin: "",
+    state: "",
+  });
+
+  // =======================
+  // PDF EXPORT
+  // =======================
   const invoiceRef = useRef<HTMLDivElement>(null);
 
-  // --------------------
-  // PDF Download
-  // --------------------
-  const downloadPDF = () => {
-    if (!invoiceRef.current) return;
+const downloadPDF = () => {
+  const validationErrors = validateInvoice(seller, buyer, items);
 
-    html2pdf()
-      .from(invoiceRef.current)
-      .set({
-        margin: 10,
-        filename: `${invoiceNumber}.pdf`,
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait",
-        },
-      })
-      .save();
-  };
+  if (validationErrors.length > 0) {
+    alert(
+      "Please fix the following before downloading PDF:\n\n" +
+        validationErrors.join("\n")
+    );
+    return;
+  }
 
+  if (!invoiceRef.current) return;
+
+  html2pdf()
+    .from(invoiceRef.current)
+    .set({
+      margin: 10,
+      filename: `${invoiceNumber}.pdf`,
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    })
+    .save();
+};
+
+
+  // =======================
+  // RENDER
+  // =======================
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       {/* PAGE TITLE */}
@@ -61,18 +94,38 @@ export default function CreateInvoice() {
       </h1>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* ================= LEFT: INVOICE FORM ================= */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <InvoiceForm
-            items={items}
-            errors={errors}
-            onAddItem={addItem}
-            onUpdateItem={updateItem}
-            onRemoveItem={removeItem}
-          />
+        {/* ================= LEFT SIDE ================= */}
+        <div className="space-y-6">
+          {/* SELLER / BUYER FORM */}
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <SellerBuyerForm
+              seller={seller}
+              buyer={buyer}
+              onSellerChange={(field, value) =>
+                setSeller((prev) => ({ ...prev, [field]: value }))
+              }
+              onBuyerChange={(field, value) =>
+                setBuyer((prev) => ({ ...prev, [field]: value }))
+              }
+              onLogoUpload={(logo) =>
+                setSeller((prev) => ({ ...prev, logo }))
+              }
+            />
+          </div>
+
+          {/* ITEM FORM */}
+          <div className="bg-white p-6 rounded-xl shadow-md">
+            <InvoiceForm
+              items={items}
+              errors={errors}
+              onAddItem={addItem}
+              onUpdateItem={updateItem}
+              onRemoveItem={removeItem}
+            />
+          </div>
         </div>
 
-        {/* ================= RIGHT: PREVIEW + PDF ================= */}
+        {/* ================= RIGHT SIDE ================= */}
         <div className="space-y-4">
           {/* PDF BUTTON */}
           <button
@@ -90,6 +143,8 @@ export default function CreateInvoice() {
               items={items}
               totals={totals}
               invoiceNumber={invoiceNumber}
+              seller={seller}
+              buyer={buyer}
             />
           </div>
         </div>
