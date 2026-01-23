@@ -86,3 +86,16 @@ export async function fetchInvoiceById(
 
   return data as InvoiceHistoryEntry;
 }
+export async function deleteInvoiceById(
+  id: string
+) {
+  const { error } = await supabase
+    .from("invoices")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error deleting invoice:", error);
+    throw error;
+  }
+}

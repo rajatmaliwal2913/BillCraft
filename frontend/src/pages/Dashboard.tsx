@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { supabase } from "../lib/supabase";
-import { fetchInvoices } from "../utils/invoices";
+import {
+  fetchInvoices,
+  deleteInvoiceById,
+} from "../utils/invoices";
 import type { InvoiceHistoryEntry } from "../types/invoice";
 
 export default function Dashboard() {
@@ -19,6 +22,26 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this invoice? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deleteInvoiceById(id);
+
+      // Optimistic UI update
+      setInvoices((prev) =>
+        prev.filter((inv) => inv.id !== id)
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete invoice");
+    }
   };
 
   if (loading) {
@@ -125,6 +148,15 @@ export default function Dashboard() {
                     >
                       Download
                     </Link>
+
+                    <button
+                      onClick={() =>
+                        handleDelete(inv.id)
+                      }
+                      className="text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
