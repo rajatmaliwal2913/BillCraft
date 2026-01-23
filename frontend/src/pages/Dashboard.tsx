@@ -75,7 +75,12 @@ export default function Dashboard() {
           >
             + Create Invoice
           </Link>
-
+          <Link
+            to="/business-profile"
+            className="border px-4 py-2 rounded hover:bg-gray-100"
+          >
+            🏢 Business Profile
+          </Link>  
           <button
             onClick={handleLogout}
             className="border px-4 py-2 rounded hover:bg-gray-100"

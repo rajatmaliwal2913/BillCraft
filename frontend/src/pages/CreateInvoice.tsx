@@ -17,7 +17,11 @@ import {
   fetchInvoiceById,
   updateInvoiceById,
 } from "../utils/invoices";
-import { fetchBeneficiaries } from "../utils/beneficiaries";
+import {
+  fetchBeneficiaries,
+  saveBuyerAsBeneficiary,
+} from "../utils/beneficiaries";
+import { fetchBusinessProfile } from "../utils/businessProfile";
 
 import type {
   SellerDetails,
@@ -25,13 +29,12 @@ import type {
   InvoiceItem,
 } from "../types/invoice";
 import type { Beneficiary } from "../types/beneficiary";
-import { saveBuyerAsBeneficiary } from "../utils/beneficiaries";
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = Boolean(id);
-
+  
   /* =======================
      LOADING GUARD
      ======================= */
@@ -61,7 +64,7 @@ export default function CreateInvoice() {
      INVOICE META
      ======================= */
   const [invoiceNumber, setInvoiceNumber] =
-    useState<string>("");
+    useState("");
 
   /* =======================
      SELLER / BUYER STATE
@@ -103,33 +106,49 @@ export default function CreateInvoice() {
   useEffect(() => {
     let mounted = true;
 
-    async function loadInvoice() {
+    async function loadData() {
+      // =====================
+      // EDIT MODE
+      // =====================
       if (isEditMode && id) {
         const invoice = await fetchInvoiceById(id);
         if (!mounted) return;
 
         setInvoiceNumber(invoice.invoice_number);
-        setSeller(invoice.seller);
+        setSeller(invoice.seller); // snapshot
         setBuyer(invoice.buyer);
         setItems(invoice.items as InvoiceItem[]);
-      } else {
-        setInvoiceNumber(generateInvoiceNumber());
-        setItems([
-          {
-            id: crypto.randomUUID(),
-            name: "",
-            quantity: 1,
-            price: 0,
-            discountRate: 0,
-            gstRate: 18,
-          },
-        ]);
+
+        setLoadingInvoice(false);
+        return;
       }
+      
+      // =====================
+      // CREATE MODE
+      // =====================
+      setInvoiceNumber(generateInvoiceNumber());
+
+      // Auto-fill seller from business profile
+      const profile = await fetchBusinessProfile();
+      if (profile && mounted) {
+        setSeller(profile);
+      }
+
+      setItems([
+        {
+          id: crypto.randomUUID(),
+          name: "",
+          quantity: 1,
+          price: 0,
+          discountRate: 0,
+          gstRate: 18,
+        },
+      ]);
 
       setLoadingInvoice(false);
     }
 
-    loadInvoice();
+    loadData();
 
     return () => {
       mounted = false;
@@ -205,29 +224,29 @@ export default function CreateInvoice() {
 
       navigate("/");
     } catch (err: any) {
-      console.error("SAVE INVOICE ERROR:", err);
+      console.error(err);
       alert(err.message || "Failed to save invoice");
     }
   };
+
+  /* =======================
+     SAVE BUYER AS BENEFICIARY
+     ======================= */
   const handleSaveBuyerAsBeneficiary =
-  async () => {
-    try {
-      await saveBuyerAsBeneficiary(buyer);
-
-      // Refresh beneficiaries list
-      const updated =
-        await fetchBeneficiaries();
-      setBeneficiaries(updated);
-
-      alert("Beneficiary saved successfully");
-    } catch (err: any) {
-      alert(
-        err.message ||
-          "Failed to save beneficiary"
-      );
-    }
-  };
-
+    async () => {
+      try {
+        await saveBuyerAsBeneficiary(buyer);
+        const updated =
+          await fetchBeneficiaries();
+        setBeneficiaries(updated);
+        alert("Beneficiary saved successfully");
+      } catch (err: any) {
+        alert(
+          err.message ||
+            "Failed to save beneficiary"
+        );
+      }
+    };
 
   /* =======================
      LOADING SCREEN
@@ -241,7 +260,7 @@ export default function CreateInvoice() {
       </div>
     );
   }
-
+  
   /* =======================
      RENDER
      ======================= */
@@ -250,7 +269,9 @@ export default function CreateInvoice() {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-indigo-700">
-          {isEditMode ? "Edit GST Invoice" : "Create GST Invoice"}
+          {isEditMode
+            ? "Edit GST Invoice"
+            : "Create GST Invoice"}
         </h1>
 
         <button
@@ -289,8 +310,8 @@ export default function CreateInvoice() {
                 }))
               }
               onSaveBuyerAsBeneficiary={
-                    handleSaveBuyerAsBeneficiary
-                }
+                handleSaveBuyerAsBeneficiary
+              }
             />
           </div>
 

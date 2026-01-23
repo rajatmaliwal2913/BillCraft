@@ -5,6 +5,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreateInvoice from "./pages/CreateInvoice";
 import Beneficiaries from "./pages/Beneficiaries";
+import BusinessProfile from "./pages/BusinessProfile";
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -23,11 +24,16 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/beneficiaries" element={<Beneficiaries />} />
+          
           <Route path="/invoices/new" element={<CreateInvoice />} />
           <Route path="/invoices/:id/edit" element={<CreateInvoice />} />
           <Route path="/invoices/:id" element={<InvoicePreviewPage />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/invoices/new" element={<CreateInvoice />} />
+          <Route
+            path="/business-profile"
+            element={<BusinessProfile />}
+          />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       )}
