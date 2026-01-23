@@ -1,4 +1,4 @@
- import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import html2pdf from "html2pdf.js";
 
@@ -17,12 +17,14 @@ import {
   fetchInvoiceById,
   updateInvoiceById,
 } from "../utils/invoices";
+import { fetchBeneficiaries } from "../utils/beneficiaries";
 
 import type {
   SellerDetails,
   BuyerDetails,
   InvoiceItem,
 } from "../types/invoice";
+import type { Beneficiary } from "../types/beneficiary";
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
@@ -34,6 +36,12 @@ export default function CreateInvoice() {
      ======================= */
   const [loadingInvoice, setLoadingInvoice] =
     useState(true);
+
+  /* =======================
+     BENEFICIARIES
+     ======================= */
+  const [beneficiaries, setBeneficiaries] =
+    useState<Beneficiary[]>([]);
 
   /* =======================
      INVOICE ITEMS + TOTALS
@@ -78,6 +86,15 @@ export default function CreateInvoice() {
       shippingAddress: "",
       shippingState: "",
     });
+
+  /* =======================
+     LOAD BENEFICIARIES
+     ======================= */
+  useEffect(() => {
+    fetchBeneficiaries()
+      .then(setBeneficiaries)
+      .catch(console.error);
+  }, []);
 
   /* =======================
      LOAD DATA (CREATE / EDIT)
@@ -231,6 +248,7 @@ export default function CreateInvoice() {
             <SellerBuyerForm
               seller={seller}
               buyer={buyer}
+              beneficiaries={beneficiaries}
               errors={validationErrors}
               onSellerChange={(field, value) =>
                 setSeller((prev) => ({

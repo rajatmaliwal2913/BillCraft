@@ -4,32 +4,41 @@ import type {
   BuyerDetails,
 } from "../../types/invoice";
 import type { ValidationErrors } from "../../utils/validateInvoice";
+import type { Beneficiary } from "../../types/beneficiary";
 import { INDIAN_STATES } from "../../constants/indianStates";
 
 interface SellerBuyerFormProps {
   seller: SellerDetails;
   buyer: BuyerDetails;
+
+  beneficiaries: Beneficiary[]; // ✅ ADDED
+
   errors: ValidationErrors;
+
   onSellerChange: (
     field: keyof SellerDetails,
     value: string
   ) => void;
+
   onBuyerChange: (
     field: keyof BuyerDetails,
     value: string
   ) => void;
+
   onLogoUpload: (logo: string) => void;
 }
 
 export default function SellerBuyerForm({
   seller,
   buyer,
+  beneficiaries,
   errors,
   onSellerChange,
   onBuyerChange,
   onLogoUpload,
 }: SellerBuyerFormProps) {
-  const [sameAsBilling, setSameAsBilling] = useState(true);
+  const [sameAsBilling, setSameAsBilling] =
+    useState(true);
 
   const handleLogoChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -55,10 +64,15 @@ export default function SellerBuyerForm({
           placeholder="Company Name *"
           value={seller.companyName}
           onChange={(e) =>
-            onSellerChange("companyName", e.target.value)
+            onSellerChange(
+              "companyName",
+              e.target.value
+            )
           }
           className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.seller.companyName ? "border-red-500" : ""
+            errors.seller.companyName
+              ? "border-red-500"
+              : ""
           }`}
         />
         {errors.seller.companyName && (
@@ -71,10 +85,15 @@ export default function SellerBuyerForm({
           placeholder="Address *"
           value={seller.address}
           onChange={(e) =>
-            onSellerChange("address", e.target.value)
+            onSellerChange(
+              "address",
+              e.target.value
+            )
           }
           className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.seller.address ? "border-red-500" : ""
+            errors.seller.address
+              ? "border-red-500"
+              : ""
           }`}
         />
         {errors.seller.address && (
@@ -90,7 +109,9 @@ export default function SellerBuyerForm({
             onSellerChange("gstin", e.target.value)
           }
           className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.seller.gstin ? "border-red-500" : ""
+            errors.seller.gstin
+              ? "border-red-500"
+              : ""
           }`}
         />
         {errors.seller.gstin && (
@@ -105,10 +126,14 @@ export default function SellerBuyerForm({
             onSellerChange("state", e.target.value)
           }
           className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.seller.state ? "border-red-500" : ""
+            errors.seller.state
+              ? "border-red-500"
+              : ""
           }`}
         >
-          <option value="">Select State *</option>
+          <option value="">
+            Select State *
+          </option>
           {INDIAN_STATES.map((state) => (
             <option key={state} value={state}>
               {state}
@@ -126,7 +151,10 @@ export default function SellerBuyerForm({
             placeholder="Phone"
             value={seller.phone || ""}
             onChange={(e) =>
-              onSellerChange("phone", e.target.value)
+              onSellerChange(
+                "phone",
+                e.target.value
+              )
             }
             className="border rounded px-3 py-2"
           />
@@ -134,7 +162,10 @@ export default function SellerBuyerForm({
             placeholder="Email"
             value={seller.email || ""}
             onChange={(e) =>
-              onSellerChange("email", e.target.value)
+              onSellerChange(
+                "email",
+                e.target.value
+              )
             }
             className="border rounded px-3 py-2"
           />
@@ -154,6 +185,38 @@ export default function SellerBuyerForm({
           Buyer Details (Billing)
         </h2>
 
+        {/* 🔽 BENEFICIARY DROPDOWN */}
+        {beneficiaries.length > 0 && (
+          <select
+            className="w-full border rounded px-3 py-2 mb-3"
+            onChange={(e) => {
+              const selected =
+                beneficiaries.find(
+                  (b) => b.id === e.target.value
+                );
+              if (!selected) return;
+
+              onBuyerChange("name", selected.name);
+              onBuyerChange(
+                "address",
+                selected.address
+              );
+              onBuyerChange("gstin", selected.gstin);
+              onBuyerChange("state", selected.state);
+              onBuyerChange("phone", selected.phone);
+            }}
+          >
+            <option value="">
+              Select Beneficiary
+            </option>
+            {beneficiaries.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        )}
+
         <input
           placeholder="Customer Name *"
           value={buyer.name}
@@ -161,7 +224,9 @@ export default function SellerBuyerForm({
             onBuyerChange("name", e.target.value)
           }
           className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.buyer.name ? "border-red-500" : ""
+            errors.buyer.name
+              ? "border-red-500"
+              : ""
           }`}
         />
         {errors.buyer.name && (
@@ -174,10 +239,15 @@ export default function SellerBuyerForm({
           placeholder="Billing Address *"
           value={buyer.address}
           onChange={(e) =>
-            onBuyerChange("address", e.target.value)
+            onBuyerChange(
+              "address",
+              e.target.value
+            )
           }
           className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.buyer.address ? "border-red-500" : ""
+            errors.buyer.address
+              ? "border-red-500"
+              : ""
           }`}
         />
         {errors.buyer.address && (
@@ -202,7 +272,9 @@ export default function SellerBuyerForm({
           }
           className="w-full border rounded px-3 py-2 mb-2"
         >
-          <option value="">Select State</option>
+          <option value="">
+            Select State
+          </option>
           {INDIAN_STATES.map((state) => (
             <option key={state} value={state}>
               {state}
@@ -214,7 +286,10 @@ export default function SellerBuyerForm({
           placeholder="Contact Number"
           value={buyer.phone || ""}
           onChange={(e) =>
-            onBuyerChange("phone", e.target.value)
+            onBuyerChange(
+              "phone",
+              e.target.value
+            )
           }
           className="w-full border rounded px-3 py-2 mb-3"
         />
