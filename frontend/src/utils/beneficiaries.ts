@@ -50,35 +50,36 @@ export async function saveBuyerAsBeneficiary(
     name,
     address,
     gstin,
-    state,
     phone,
+    state,
   } = buyer;
-
-  if (!name || !address || !state) {
-    throw new Error(
-      "Buyer name, address and state are required"
-    );
-  }
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    throw new Error("User not authenticated");
-  }
+  if (!user) throw new Error("Not authenticated");
 
-  // Prevent duplicates (GSTIN OR name)
-  const { data: existing } = await supabase
+  // Priority-based duplicate check
+  let query = supabase
     .from("beneficiaries")
     .select("id")
-    .or(
-      gstin
-        ? `gstin.eq.${gstin}`
-        : `name.eq.${name}`
-    )
-    .eq("user_id", user.id)
-    .maybeSingle();
+    .eq("user_id", user.id);
+
+  if (gstin) {
+    query = query.eq("gstin", gstin);
+  } else if (phone) {
+    query = query.eq("phone", phone);
+  } else if (name) {
+    query = query.eq("name", name);
+  } else {
+    throw new Error(
+      "At least GSTIN, phone or name is required"
+    );
+  }
+
+  const { data: existing } =
+    await query.maybeSingle();
 
   if (existing) {
     throw new Error(
@@ -93,9 +94,10 @@ export async function saveBuyerAsBeneficiary(
       name,
       address,
       gstin,
-      state,
       phone,
+      state,
     });
 
   if (error) throw error;
 }
+

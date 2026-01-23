@@ -11,7 +11,7 @@ interface SellerBuyerFormProps {
   seller: SellerDetails;
   buyer: BuyerDetails;
 
-  beneficiaries: Beneficiary[]; // ✅ ADDED
+  beneficiaries: Beneficiary[];
 
   errors: ValidationErrors;
 
@@ -26,6 +26,7 @@ interface SellerBuyerFormProps {
   ) => void;
 
   onLogoUpload: (logo: string) => void;
+
   onSaveBuyerAsBeneficiary: () => void;
 }
 
@@ -42,6 +43,19 @@ export default function SellerBuyerForm({
   const [sameAsBilling, setSameAsBilling] =
     useState(true);
 
+  const [
+    selectedBeneficiaryId,
+    setSelectedBeneficiaryId,
+  ] = useState<string | null>(null);
+
+  // Tracks ONLY fields filled from beneficiary
+  const [
+    lockedBuyerFields,
+    setLockedBuyerFields,
+  ] = useState<Set<keyof BuyerDetails>>(
+    new Set()
+  );
+
   const handleLogoChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -52,6 +66,51 @@ export default function SellerBuyerForm({
     reader.onload = () =>
       onLogoUpload(reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const handleBeneficiarySelect = (
+    id: string | null
+  ) => {
+    setSelectedBeneficiaryId(id);
+
+    // Clear locks if beneficiary cleared
+    if (!id) {
+      setLockedBuyerFields(new Set());
+      return;
+    }
+
+    const selected = beneficiaries.find(
+      (b) => b.id === id
+    );
+    if (!selected) return;
+
+    const locked = new Set<keyof BuyerDetails>();
+
+    if (selected.name) {
+      onBuyerChange("name", selected.name);
+      locked.add("name");
+    }
+    if (selected.address) {
+      onBuyerChange(
+        "address",
+        selected.address
+      );
+      locked.add("address");
+    }
+    if (selected.gstin) {
+      onBuyerChange("gstin", selected.gstin);
+      locked.add("gstin");
+    }
+    if (selected.state) {
+      onBuyerChange("state", selected.state);
+      locked.add("state");
+    }
+    if (selected.phone) {
+      onBuyerChange("phone", selected.phone);
+      locked.add("phone");
+    }
+
+    setLockedBuyerFields(locked);
   };
 
   return (
@@ -77,11 +136,6 @@ export default function SellerBuyerForm({
               : ""
           }`}
         />
-        {errors.seller.companyName && (
-          <p className="text-xs text-red-600">
-            {errors.seller.companyName}
-          </p>
-        )}
 
         <textarea
           placeholder="Address *"
@@ -98,11 +152,6 @@ export default function SellerBuyerForm({
               : ""
           }`}
         />
-        {errors.seller.address && (
-          <p className="text-xs text-red-600">
-            {errors.seller.address}
-          </p>
-        )}
 
         <input
           placeholder="GSTIN *"
@@ -116,11 +165,6 @@ export default function SellerBuyerForm({
               : ""
           }`}
         />
-        {errors.seller.gstin && (
-          <p className="text-xs text-red-600">
-            {errors.seller.gstin}
-          </p>
-        )}
 
         <select
           value={seller.state}
@@ -142,11 +186,6 @@ export default function SellerBuyerForm({
             </option>
           ))}
         </select>
-        {errors.seller.state && (
-          <p className="text-xs text-red-600">
-            {errors.seller.state}
-          </p>
-        )}
 
         <div className="grid grid-cols-2 gap-3 mt-2">
           <input
@@ -186,34 +225,29 @@ export default function SellerBuyerForm({
         <h2 className="text-lg font-semibold mb-3">
           Buyer Details (Billing)
         </h2>
+
         <button
-            type="button"
-            onClick={onSaveBuyerAsBeneficiary}
-            className="text-sm text-indigo-600 hover:underline mb-2"
-            >
-            ➕ Save Buyer as Beneficiary
+          type="button"
+          disabled={Boolean(selectedBeneficiaryId)}
+          onClick={onSaveBuyerAsBeneficiary}
+          className={`text-sm mb-2 ${
+            selectedBeneficiaryId
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-indigo-600 hover:underline"
+          }`}
+        >
+          ➕ Save Buyer as Beneficiary
         </button>
-    
-        {/* 🔽 BENEFICIARY DROPDOWN */}
+
         {beneficiaries.length > 0 && (
           <select
+            value={selectedBeneficiaryId || ""}
             className="w-full border rounded px-3 py-2 mb-3"
-            onChange={(e) => {
-              const selected =
-                beneficiaries.find(
-                  (b) => b.id === e.target.value
-                );
-              if (!selected) return;
-
-              onBuyerChange("name", selected.name);
-              onBuyerChange(
-                "address",
-                selected.address
-              );
-              onBuyerChange("gstin", selected.gstin);
-              onBuyerChange("state", selected.state);
-              onBuyerChange("phone", selected.phone);
-            }}
+            onChange={(e) =>
+              handleBeneficiarySelect(
+                e.target.value || null
+              )
+            }
           >
             <option value="">
               Select Beneficiary
@@ -229,57 +263,43 @@ export default function SellerBuyerForm({
         <input
           placeholder="Customer Name *"
           value={buyer.name}
+          disabled={lockedBuyerFields.has("name")}
           onChange={(e) =>
             onBuyerChange("name", e.target.value)
           }
-          className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.buyer.name
-              ? "border-red-500"
-              : ""
-          }`}
+          className="w-full border rounded px-3 py-2 mb-1 disabled:bg-gray-100"
         />
-        {errors.buyer.name && (
-          <p className="text-xs text-red-600">
-            {errors.buyer.name}
-          </p>
-        )}
 
         <textarea
           placeholder="Billing Address *"
           value={buyer.address}
+          disabled={lockedBuyerFields.has("address")}
           onChange={(e) =>
             onBuyerChange(
               "address",
               e.target.value
             )
           }
-          className={`w-full border rounded px-3 py-2 mb-1 ${
-            errors.buyer.address
-              ? "border-red-500"
-              : ""
-          }`}
+          className="w-full border rounded px-3 py-2 mb-1 disabled:bg-gray-100"
         />
-        {errors.buyer.address && (
-          <p className="text-xs text-red-600">
-            {errors.buyer.address}
-          </p>
-        )}
 
         <input
           placeholder="GSTIN (optional)"
           value={buyer.gstin}
+          disabled={lockedBuyerFields.has("gstin")}
           onChange={(e) =>
             onBuyerChange("gstin", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className="w-full border rounded px-3 py-2 mb-2 disabled:bg-gray-100"
         />
 
         <select
           value={buyer.state}
+          disabled={lockedBuyerFields.has("state")}
           onChange={(e) =>
             onBuyerChange("state", e.target.value)
           }
-          className="w-full border rounded px-3 py-2 mb-2"
+          className="w-full border rounded px-3 py-2 mb-2 disabled:bg-gray-100"
         >
           <option value="">
             Select State
@@ -294,13 +314,14 @@ export default function SellerBuyerForm({
         <input
           placeholder="Contact Number"
           value={buyer.phone || ""}
+          disabled={lockedBuyerFields.has("phone")}
           onChange={(e) =>
             onBuyerChange(
               "phone",
               e.target.value
             )
           }
-          className="w-full border rounded px-3 py-2 mb-3"
+          className="w-full border rounded px-3 py-2 mb-3 disabled:bg-gray-100"
         />
 
         <label className="flex items-center gap-2 text-sm mb-2">
