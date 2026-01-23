@@ -148,6 +148,12 @@ export default function Dashboard() {
                     >
                       Download
                     </Link>
+                    <Link
+                        to={`/invoices/${inv.id}/edit`}
+                        className="text-blue-600 hover:underline"
+                        >
+                        Edit
+                    </Link>
 
                     <button
                       onClick={() =>

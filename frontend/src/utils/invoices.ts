@@ -99,3 +99,29 @@ export async function deleteInvoiceById(
     throw error;
   }
 }
+
+export async function updateInvoiceById(
+  id: string,
+  params: {
+    seller: any;
+    buyer: any;
+    items: any[];
+    totals: any;
+  }
+) {
+  const { error } = await supabase
+    .from("invoices")
+    .update({
+      seller: params.seller,
+      buyer: params.buyer,
+      items: params.items,
+      totals: params.totals,
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Error updating invoice:", error);
+    throw error;
+  }
+}
+

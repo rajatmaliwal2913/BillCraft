@@ -4,13 +4,14 @@ import { calculateInvoiceTotals } from "../utils/calculations";
 import { validateItem } from "../utils/validators";
 
 /**
- * Central GST-aware invoice state & calculation hook
+ * Central invoice state & calculation hook
+ * (Aligned with current InvoiceTotals type)
  */
-export function useInvoiceCalculator() {
-  // --------------------
-  // STATE
-  // --------------------
-  const [items, setItems] = useState<InvoiceItem[]>([]);
+export function useInvoiceCalculator(
+  initialItems: InvoiceItem[] = []
+) {
+  const [items, setItems] =
+    useState<InvoiceItem[]>(initialItems);
   const [errors, setErrors] = useState<Record<string, any>>({});
 
   // --------------------
@@ -23,7 +24,6 @@ export function useInvoiceCalculator() {
   // --------------------
   // ITEM OPERATIONS
   // --------------------
-
   const addItem = () => {
     const newItem: InvoiceItem = {
       id: crypto.randomUUID(),
@@ -81,6 +81,7 @@ export function useInvoiceCalculator() {
   // --------------------
   return {
     items,
+    setItems, // 👈 required later for Edit Invoice
     totals,
     errors,
     addItem,
