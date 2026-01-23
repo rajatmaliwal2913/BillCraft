@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
 import type { SellerDetails } from "../types/invoice";
 import { INDIAN_STATES } from "../constants/indianStates";
-import { upsertBusinessProfile } from "../utils/businessProfile";
+import { fetchBusinessProfile, upsertBusinessProfile } from "../utils/businessProfile";
 
 export default function BusinessProfile() {
   const navigate = useNavigate();
@@ -28,30 +27,30 @@ export default function BusinessProfile() {
      LOAD PROFILE
      ======================= */
   useEffect(() => {
-    async function loadProfile() {
-      const { data, error } =
-        await supabase
-          .from("business_profiles")
-          .select("*")
-          .single();
+  let mounted = true;
 
-      if (data) {
-        setSeller({
-          companyName: data.company_name,
-          address: data.address,
-          gstin: data.gstin,
-          state: data.state,
-          phone: data.phone,
-          email: data.email,
-          logo: data.logo,
-        });
+  async function loadProfile() {
+    try {
+      const profile = await fetchBusinessProfile();
+
+      if (profile && mounted) {
+        setSeller(profile);
       }
-
-      setLoading(false);
+    } catch (err) {
+      console.error("LOAD BUSINESS PROFILE ERROR:", err);
+    } finally {
+      if (mounted) {
+        setLoading(false);
+      }
     }
+  }
 
-    loadProfile();
-  }, []);
+  loadProfile();
+
+  return () => {
+    mounted = false;
+  };
+}, []);
 
   /* =======================
      SAVE PROFILE
