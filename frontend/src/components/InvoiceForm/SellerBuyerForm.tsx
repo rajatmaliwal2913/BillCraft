@@ -26,6 +26,7 @@ interface SellerBuyerFormProps {
   ) => void;
 
   onLogoUpload: (logo: string) => void;
+  onSaveBuyerAsBeneficiary: () => void;
 }
 
 export default function SellerBuyerForm({
@@ -36,6 +37,7 @@ export default function SellerBuyerForm({
   onSellerChange,
   onBuyerChange,
   onLogoUpload,
+  onSaveBuyerAsBeneficiary,
 }: SellerBuyerFormProps) {
   const [sameAsBilling, setSameAsBilling] =
     useState(true);
@@ -184,7 +186,14 @@ export default function SellerBuyerForm({
         <h2 className="text-lg font-semibold mb-3">
           Buyer Details (Billing)
         </h2>
-
+        <button
+            type="button"
+            onClick={onSaveBuyerAsBeneficiary}
+            className="text-sm text-indigo-600 hover:underline mb-2"
+            >
+            ➕ Save Buyer as Beneficiary
+        </button>
+    
         {/* 🔽 BENEFICIARY DROPDOWN */}
         {beneficiaries.length > 0 && (
           <select

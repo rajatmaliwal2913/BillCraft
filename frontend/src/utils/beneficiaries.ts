@@ -41,3 +41,61 @@ export async function deleteBeneficiary(id: string) {
 
   if (error) throw error;
 }
+import type { BuyerDetails } from "../types/invoice";
+
+export async function saveBuyerAsBeneficiary(
+  buyer: BuyerDetails
+) {
+  const {
+    name,
+    address,
+    gstin,
+    state,
+    phone,
+  } = buyer;
+
+  if (!name || !address || !state) {
+    throw new Error(
+      "Buyer name, address and state are required"
+    );
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  // Prevent duplicates (GSTIN OR name)
+  const { data: existing } = await supabase
+    .from("beneficiaries")
+    .select("id")
+    .or(
+      gstin
+        ? `gstin.eq.${gstin}`
+        : `name.eq.${name}`
+    )
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error(
+      "Beneficiary already exists"
+    );
+  }
+
+  const { error } = await supabase
+    .from("beneficiaries")
+    .insert({
+      user_id: user.id,
+      name,
+      address,
+      gstin,
+      state,
+      phone,
+    });
+
+  if (error) throw error;
+}

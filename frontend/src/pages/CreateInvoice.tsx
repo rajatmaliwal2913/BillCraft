@@ -25,6 +25,7 @@ import type {
   InvoiceItem,
 } from "../types/invoice";
 import type { Beneficiary } from "../types/beneficiary";
+import { saveBuyerAsBeneficiary } from "../utils/beneficiaries";
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
@@ -208,6 +209,25 @@ export default function CreateInvoice() {
       alert(err.message || "Failed to save invoice");
     }
   };
+  const handleSaveBuyerAsBeneficiary =
+  async () => {
+    try {
+      await saveBuyerAsBeneficiary(buyer);
+
+      // Refresh beneficiaries list
+      const updated =
+        await fetchBeneficiaries();
+      setBeneficiaries(updated);
+
+      alert("Beneficiary saved successfully");
+    } catch (err: any) {
+      alert(
+        err.message ||
+          "Failed to save beneficiary"
+      );
+    }
+  };
+
 
   /* =======================
      LOADING SCREEN
@@ -268,6 +288,9 @@ export default function CreateInvoice() {
                   logo,
                 }))
               }
+              onSaveBuyerAsBeneficiary={
+                    handleSaveBuyerAsBeneficiary
+                }
             />
           </div>
 
