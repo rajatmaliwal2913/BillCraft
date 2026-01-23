@@ -4,6 +4,7 @@ import InvoicePreviewPage from "./pages/InvoicePreview";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CreateInvoice from "./pages/CreateInvoice";
+import Beneficiaries from "./pages/Beneficiaries";
 
 export default function App() {
   const { user, loading } = useAuth();
@@ -21,6 +22,7 @@ export default function App() {
       ) : (
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/beneficiaries" element={<Beneficiaries />} />
           <Route path="/invoices/new" element={<CreateInvoice />} />
           <Route path="/invoices/:id/edit" element={<CreateInvoice />} />
           <Route path="/invoices/:id" element={<InvoicePreviewPage />} />

@@ -33,8 +33,6 @@ export default function Dashboard() {
 
     try {
       await deleteInvoiceById(id);
-
-      // Optimistic UI update
       setInvoices((prev) =>
         prev.filter((inv) => inv.id !== id)
       );
@@ -47,7 +45,9 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-600">Loading invoices...</p>
+        <p className="text-gray-600">
+          Loading invoices...
+        </p>
       </div>
     );
   }
@@ -57,10 +57,18 @@ export default function Dashboard() {
       {/* ================= HEADER ================= */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-indigo-700">
-          Billcraft Dashboard
+          BillCraft Dashboard
         </h1>
 
         <div className="flex gap-3">
+          {/* NEW: Manage Beneficiaries */}
+          <Link
+            to="/beneficiaries"
+            className="border px-4 py-2 rounded hover:bg-gray-100"
+          >
+            Manage Beneficiaries
+          </Link>
+
           <Link
             to="/invoices/new"
             className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
@@ -148,11 +156,12 @@ export default function Dashboard() {
                     >
                       Download
                     </Link>
+
                     <Link
-                        to={`/invoices/${inv.id}/edit`}
-                        className="text-blue-600 hover:underline"
-                        >
-                        Edit
+                      to={`/invoices/${inv.id}/edit`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
                     </Link>
 
                     <button
